@@ -5,8 +5,7 @@ import logging
 import socket
 import time
 
-import util
-import local_config
+from matches import local_config, util
 
 
 class MatchStream:
@@ -61,8 +60,8 @@ class MatchStream:
         """
         try:
             self._connection.close()
+            time.sleep(self._poll_seconds)
             self._connection.connect()
-            time.sleep(self.poll_seconds)
         # Except all exceptions... I don't have time for this
         except (socket.timeout, ConnectionRefusedError, Exception) as e:
             if num_attempts == -1:
@@ -117,14 +116,15 @@ class MatchStream:
         while True:
             # If it's been < poll_seconds since the last time we tried to get matches, wait poll_seconds.
             if time.time() - self._last_poll_time < self._poll_seconds:
-                time.sleep(self.poll_seconds)
+                time.sleep(self._poll_seconds)
 
+            self._last_poll_time = time.time()
             matches = self._maybe_get_next_matches()
             if matches:
                 self._most_recent_streamed_match = matches[-1]["match_seq_num"]
                 return matches
 
-            time.sleep(self.poll_seconds)
+            time.sleep(self._poll_seconds)
 
     def _maybe_get_next_matches(self):
         self._connection.request(
@@ -152,6 +152,7 @@ class MatchStream:
         except ConnectionResetError:
             logging.info("Connection reset, waiting & continuing...")
             self._reconnect_connection(num_attempts=-1)
+            return None
 
         try:
             match_history = json.loads(response.decode("utf-8"))

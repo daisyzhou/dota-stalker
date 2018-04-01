@@ -1,8 +1,4 @@
-import local_config
-
 import http
-import json
-import time
 
 
 def create_steamapi_connection():

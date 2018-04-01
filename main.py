@@ -1,5 +1,5 @@
 # Temporary main for testing/verification
-import match_stream
+from matches import match_stream
 
 ms = match_stream.MatchStream()
 ms.start(5)
