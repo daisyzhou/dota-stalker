@@ -11,4 +11,3 @@ for match in ms:
         if "account_id" in player  # Bots have no account_id
     ]
 
-    print(match)

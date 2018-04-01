@@ -5,7 +5,8 @@ import logging
 import socket
 import time
 
-from matches import local_config, util
+from matches import util
+import local_config
 
 
 class MatchStream:
