@@ -29,21 +29,20 @@ async def on_message(message):
         await asyncio.sleep(5)
         await client.send_message(message.channel, 'Done sleeping')
 
-    elif message.content.startswith('!addme'):
-        await client.send_message(message.channel, 'Adding you to the list for this channel...')
-        print("debug: message author %s, message channel %s" % (message.author, message.channel))
-        storage.users[message.author].append(message.channel)
-        print("debug: storage now contains %s" % str(storage.users.items()))
-        await client.send_message(message.channel, 'Added you to the list for this channel.')
+    elif message.content.startswith('!add'):
+        steam_id = message.content.strip("!add ")
+        await client.send_message(message.channel, 'Adding %s to the list for this channel...' % steam_id)
+        storage.players[steam_id].append(message.channel)
+        await client.send_message(message.channel, 'Added %s to the list for this channel.' % steam_id)
 
 
 async def push_notifications():
     await client.wait_until_ready()
     while not client.is_closed:
         await asyncio.sleep(3)
-        print("attempting to say hello to %d users" % len(storage.users))
-        for user, channels in storage.users.items():
-            message = "HELLO WORLD %s" % str(user)
+        print("attempting to say hello to %d users" % len(storage.players))
+        for steam_id, channels in storage.players.items():
+            message = "HELLO WORLD %s" % str(steam_id)
             for channel in channels:
                 await client.send_message(channel, message)
 

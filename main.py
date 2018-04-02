@@ -10,4 +10,6 @@ for match in ms:
         for player in match["players"]
         if "account_id" in player  # Bots have no account_id
     ]
+    for player in players_in_match:
+        if player in
 
