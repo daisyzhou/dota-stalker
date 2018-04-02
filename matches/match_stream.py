@@ -11,7 +11,7 @@ import local_config
 
 class MatchStream:
     """
-    Processes matches from the Dota 2 web API
+    Gets matches from the Dota 2 web API
     (see http://dev.dota2.com/showthread.php?t=58317 and
     https://wiki.teamfortress.com/wiki/WebAPI#Dota_2) and provides an iterator interface to them.
     Matches can only be iterated through once.

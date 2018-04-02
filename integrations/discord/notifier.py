@@ -1,11 +1,13 @@
-import discord
 import asyncio
-import time
+import discord
+import queue
 
 from state import storage
 import local_config
+from integrations import notify_queue
 
-client = discord.Client()
+loop = asyncio.get_event_loop()
+client = discord.Client(loop=loop)
 
 @client.event
 async def on_ready():
@@ -40,11 +42,19 @@ async def push_notifications():
     await client.wait_until_ready()
     while not client.is_closed:
         await asyncio.sleep(3)
-        print("attempting to say hello to %d users" % len(storage.players))
+        try:
+            (player, match) = notify_queue.matches_to_notify.get_nowait()
+        except queue.Empty:
+            continue
         for steam_id, channels in storage.players.items():
-            message = "HELLO WORLD %s" % str(steam_id)
-            for channel in channels:
-                await client.send_message(channel, message)
+            if player == steam_id:
+                message = "found your game! steam ID %s" % str(steam_id)
+                for channel in channels:
+                    await client.send_message(channel, message)
 
 client.loop.create_task(push_notifications())
-client.run(local_config.DISCORD_BOT_API_KEY)
+
+def run_bot():
+    asyncio.set_event_loop(loop)
+    client.run(local_config.DISCORD_BOT_API_KEY)
+
