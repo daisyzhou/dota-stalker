@@ -47,14 +47,14 @@ async def push_notifications():
     while not client.is_closed:
         await asyncio.sleep(0)
         try:
-            (player, match) = notify_queue.matches_to_notify.get_nowait()
+            (player, message_chunk) = notify_queue.matches_to_notify.get_nowait()
         except queue.Empty:
             continue
         for steam_id, usernamechannels in storage.players.items():
             if player == steam_id:
                 for (userid, channel) in usernamechannels:
-                    message = create_notification_message(player, match, userid)
                     start = time.time()
+                    message = "%s %s" % ("<@%s> " % userid, message_chunk)
                     await client.send_message(channel, message)
                     end = time.time()
                     print("time it took to send message: %d" % (end-start))
