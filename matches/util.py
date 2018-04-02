@@ -41,7 +41,7 @@ def create_match_notification_message(account_id, match, hero_lookup):
     radiant = False
     hero_id = None
     for index, player in enumerate(match["players"]):
-        if player == account_id:
+        if player["account_id"] == account_id:
             hero_id = player["hero_id"]
             if index < 5:
                 radiant = True
