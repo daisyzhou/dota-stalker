@@ -1,6 +1,7 @@
 import asyncio
 import discord
 import queue
+import time
 
 from state import storage
 import local_config
@@ -32,25 +33,31 @@ async def on_message(message):
         await client.send_message(message.channel, 'Done sleeping')
 
     elif message.content.startswith('!add'):
-        steam_id = message.content.strip("!add ")
+        steam_id = int(message.content.strip("!add "))
         await client.send_message(message.channel, 'Adding %s to the list for this channel...' % steam_id)
-        storage.players[steam_id].append(message.channel)
+        storage.players[steam_id].append((message.author.id, message.channel))
         await client.send_message(message.channel, 'Added %s to the list for this channel.' % steam_id)
+
+def create_notification_message(player, match, userid):
+    return "<@%s> just finished a game!  Match ID: %d" % (userid, match["match_seq_num"])
 
 
 async def push_notifications():
     await client.wait_until_ready()
     while not client.is_closed:
-        await asyncio.sleep(3)
+        await asyncio.sleep(0)
         try:
             (player, match) = notify_queue.matches_to_notify.get_nowait()
         except queue.Empty:
             continue
-        for steam_id, channels in storage.players.items():
+        for steam_id, usernamechannels in storage.players.items():
             if player == steam_id:
-                message = "found your game! steam ID %s" % str(steam_id)
-                for channel in channels:
+                for (userid, channel) in usernamechannels:
+                    message = create_notification_message(player, match, userid)
+                    start = time.time()
                     await client.send_message(channel, message)
+                    end = time.time()
+                    print("time it took to send message: %d" % (end-start))
 
 client.loop.create_task(push_notifications())
 

@@ -26,3 +26,8 @@ venv/bin/pip install -U discord.py
 
 To add the bot to a server: https://discordapp.com/oauth2/authorize?client_id=BOT_CLIENT_ID_GOES_HERE&scope=bot&permissions=0
 
+# TODO
+* add nice match parsing (who won? what hero did they play?)
+* disallow using the anonymous user ID
+* if it starts getting too slow, parallelize the sending messages to discord part
+
