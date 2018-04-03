@@ -27,6 +27,9 @@ venv/bin/pip install -U discord.py
 To add the bot to a server: https://discordapp.com/oauth2/authorize?client_id=BOT_CLIENT_ID_GOES_HERE&scope=bot&permissions=0
 
 # TODO
+* see if we can get the steam ID from Discord's steam integration
+* add a testing framework for the discord bot (use a mock MatchStream)
+* persist state somewhere
 * disallow using the anonymous user ID
 * if it starts getting too slow, parallelize the sending messages to discord part
 
