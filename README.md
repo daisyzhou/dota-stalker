@@ -34,9 +34,8 @@ venv/bin/pip3  install -r integrations/discord/oauth/requirements.txt
 ```
 
 # TODO
-* see if we can get the steam ID from Discord's steam integration
-    * requires oauth: https://github.com/discordapp/discord-oauth2-example which I think means it's opt-in from users
-    * might want to stop using discord.py library and implement all that gateway stuff ourselves?
+* make the storage threadsafe (it's super definitely not right now... o_o)
+* might want to stop using discord.py library and implement all that gateway stuff ourselves?
 * add a testing framework for the discord bot (use a mock MatchStream)
 * persist state somewhere
 * disallow using the anonymous user ID
