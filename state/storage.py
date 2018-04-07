@@ -1,9 +1,9 @@
 from collections import defaultdict
 
-# map from steamID -> list of (user, channels) they're in
+# map from discordId -> list of channels they want to be stalked in
 # TODO: will need to persist this somewhere, long term
 # TODO: this needs to be made threadsafe
-players = defaultdict(lambda: [])
+player_channels = defaultdict(lambda: [])
 
-# map from discord ID -> base64 steam ID
-steam_ids = {}
+# map from base64 steam ID -> discord ID
+steam_to_discord = {}

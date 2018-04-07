@@ -1,14 +1,20 @@
-import state.storage
-import local_config
-
+import math
 import os
+
 from flask import Flask, session, redirect, request, url_for, jsonify
 from requests_oauthlib import OAuth2Session
 from werkzeug.exceptions import HTTPException
 
+import state.storage
+import local_config
+
+
+# In binary, this is 32 1s, which is useful for converting steam IDs
+THIRTY_TWO_ONES = int(math.pow(2, 32) - 1)
+
 OAUTH2_CLIENT_ID = local_config.DISCORD_BOT_CLIENT_ID
 OAUTH2_CLIENT_SECRET = local_config.DISCORD_BOT_CLIENT_SECRET
-OAUTH2_REDIRECT_URI = 'http://localhost:5005/dota_stalker_callback'
+OAUTH2_REDIRECT_URI = 'http://daisy.zone:5005/dota_stalker_callback'
 
 API_BASE_URL = os.environ.get('API_BASE_URL', 'https://discordapp.com/api')
 AUTHORIZATION_BASE_URL = API_BASE_URL + '/oauth2/authorize'
@@ -17,6 +23,7 @@ TOKEN_URL = API_BASE_URL + '/oauth2/token'
 app = Flask(__name__)
 app.debug = False
 app.config['SECRET_KEY'] = OAUTH2_CLIENT_SECRET
+
 
 if 'http://' in OAUTH2_REDIRECT_URI:
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = 'true'
@@ -80,19 +87,23 @@ def callback():
     session['oauth2_token'] = token
     connections = discord.get(API_BASE_URL + '/users/@me/connections').json()
     user = discord.get(API_BASE_URL + '/users/@me').json()
-    steam_id = None # base64 steam ID
+    b64_steam_id = None # base64 steam ID
     print("DEBUG: about to check %d connections", len(connections))
     for connection in connections:
         if connection['type'] == 'steam':
-            steam_id = connection['id']
+            b64_steam_id = connection['id']
             print("DEBUG: got steam ID!")
             break
-    if steam_id is None:
+    if b64_steam_id is None:
         print("!!! no steam account connected for user %s" % user)
         raise SteamNotConnected(message="no steam account connected for user %s" % user)
 
-    state.storage.steam_ids[user['id']] = steam_id
-    print("DEBUG: successfully stored steam ID %s for user %s" % (steam_id, user))
+    b64_steam_id = int(b64_steam_id)
+    print("DEBUG: b64 steam ID is %d" % b64_steam_id)
+    b32_steam_id = b64_steam_id & THIRTY_TWO_ONES
+    print("DEBUG: b32 steam ID is %d" % b32_steam_id)
+    state.storage.steam_to_discord[b32_steam_id] = user['id']
+    print("DEBUG: successfully stored steam ID %s for user %s" % (b32_steam_id, user))
     return redirect(url_for('.steam_id_success'))
 
 
@@ -110,8 +121,10 @@ def handle_steam_not_connected(error):
 
 @app.errorhandler(Exception)
 def oops(error):
+    print("ERROR: %s" % error)
     response = jsonify(
-        error="Sorry, something went wrong, probably because I'm bad and everything is hacky.  Message me!")
+        error="Sorry, something went wrong, probably because I'm bad and everything is hacky.  "
+        "Message me at dzbug#2602!")
     if isinstance(error, HTTPException):
         response.status_code = error.code
     else:
@@ -120,4 +133,4 @@ def oops(error):
 
 
 def run_steam_id_getter():
-    app.run(port=5005)
+    app.run(host='0.0.0.0', port=5005)

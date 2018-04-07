@@ -19,27 +19,53 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.content.startswith('!test'):
-        counter = 0
-        tmp = await client.send_message(message.channel, 'Calculating messages...')
-        print ("channel: %v", message.channel)
-        async for log in client.logs_from(message.channel, limit=100):
-            if log.author == message.author:
-                counter += 1
+    if message.content.startswith('!help'):
+        await client.send_message(message.channel, 'type `!stalker help` for more help from me ^_^')
 
-        await client.edit_message(tmp, 'You have {} messages.'.format(counter))
-    elif message.content.startswith('!sleep'):
-        await asyncio.sleep(5)
-        await client.send_message(message.channel, 'Done sleeping')
+    elif message.content.startswith('!stalker status'):
+        await client.send_message(message.channel, 'I am alive... I think')
 
-    elif message.content.startswith('!add'):
-        steam_id = int(message.content.strip("!add "))
-        await client.send_message(message.channel, 'Adding %s to the list for this channel...' % steam_id)
-        storage.players[steam_id].append((message.author.id, message.channel))
-        await client.send_message(message.channel, 'Added %s to the list for this channel.' % steam_id)
+    elif message.content.startswith('!stalker help'):
+        help_message="""
+        ** I'm just an experiment!  Your user info may be lost at any time.  I also may explode.**
+        
+        I watch Dota 2 matches as they finish and I can update this channel when you finish a game.
+        Commands:
+        `!stalker help`:
+            This command.
+        `!stalker status`:
+            I'll tell you if I'm up and in your channel.
+        `!stalker stalkme`:
+            First I'll send a link for you to authorize me to look at your Discord integrations, so that I can get your
+            steam ID.  Then I'll add your name to the list of users to stalk for THIS channel.  Obviously this only 
+            works if you've connected your steam account to your discord account.
+        `!stalker stop all`
+            I'll stop stalking you in ALL channels.
+        """
+        await client.send_message(message.channel, help_message)
 
-def create_notification_message(player, match, userid):
-    return "<@%s> just finished a game!  Match ID: %d" % (userid, match["match_seq_num"])
+    elif message.content.startswith('!stalker stalkme'):
+        discord_id = message.author.id
+        if discord_id not in storage.steam_to_discord.values():
+            await client.send_message(
+                message.channel,
+                "<@%s>, please authorize me to see your steam ID by clicking here: http://daisy.zone:5005/dota_stalker_add.  I'll wait!" % discord_id)
+        while discord_id not in storage.steam_to_discord.values():
+            print("DEBUG: waiting for steam ID from user: %s" % discord_id)
+            await asyncio.sleep(5)
+        storage.player_channels[discord_id].append(message.channel)
+        await client.send_message(message.channel, '<@%s>, I have your steam ID.  Added you to the list for this channel.' % discord_id)
+
+    elif message.content.startswith('!stalker stop all'):
+        discord_id = message.author.id
+        storage.player_channels[discord_id] = []
+        for s,d in storage.steam_to_discord.items():
+            if d == discord_id:
+                del(storage.steam_to_discord, s)
+        await client.send_message(message.channel, 'Removed <@%s> from all channels.  You are dead to me.' % discord_id)
+
+    elif message.content.startswith('!stalker'):
+        await client.send_message(message.channel, 'Unrecognized command.  try `!stalker help`')
 
 
 async def push_notifications():
@@ -50,14 +76,18 @@ async def push_notifications():
             (player, message_chunk) = notify_queue.matches_to_notify.get_nowait()
         except queue.Empty:
             continue
-        for steam_id, usernamechannels in storage.players.items():
-            if player == steam_id:
-                for (userid, channel) in usernamechannels:
+        messages_sent = 0
+        for discord_id, channels in storage.player_channels.items():
+            if storage.steam_to_discord[player] == discord_id:
+                for channel in channels:
                     start = time.time()
-                    message = "%s %s" % ("<@%s> " % userid, message_chunk)
+                    message = "%s %s" % ("<@%s> " % discord_id, message_chunk)
                     await client.send_message(channel, message)
                     end = time.time()
                     print("time it took to send message: %d" % (end-start))
+                    messages_sent += 1
+        if messages_sent == 0:
+            print("ERROR: 0 messages sent for player %s" % player)
 
 client.loop.create_task(push_notifications())
 
