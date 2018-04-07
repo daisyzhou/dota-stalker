@@ -2,6 +2,7 @@ from integrations import notify_queue
 from matches import match_stream
 from state import storage
 from integrations.discord import notifier as discord_notifier
+from integrations.discord.oauth import app as discord_oauth_app
 from matches import util
 
 import queue
@@ -10,8 +11,11 @@ import threading
 ms = match_stream.MatchStream()
 ms.start(5)
 
-t = threading.Thread(target=discord_notifier.run_bot, daemon=True)
-t.start()
+discord_notifier_thread = threading.Thread(target=discord_notifier.run_bot, daemon=True)
+discord_notifier_thread.start()
+
+discord_oauth_thread = threading.Thread(target=discord_oauth_app.run_steam_id_getter, daemon=True)
+discord_oauth_thread.start()
 
 heroes = util.get_heroes()
 

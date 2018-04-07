@@ -5,3 +5,5 @@ from collections import defaultdict
 # TODO: this needs to be made threadsafe
 players = defaultdict(lambda: [])
 
+# map from discord ID -> base64 steam ID
+steam_ids = {}
