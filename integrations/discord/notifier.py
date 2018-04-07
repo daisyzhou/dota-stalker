@@ -29,7 +29,7 @@ async def on_message(message):
         help_message="""
         ** I'm just an experiment!  Your user info may be lost at any time.  I also might explode.**
         
-        I watch Dota 2 matches as they finish and I can update this channel when you finish a game.
+        I watch Dota 2 matches as they finish and I can update this channel when you finish a game, so your friends can make fun of you.
         Commands:
         `!stalker help`:
             This command.

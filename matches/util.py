@@ -1,6 +1,7 @@
 import http
 import json
 from collections import defaultdict
+from collections import namedtuple
 
 import local_config
 
@@ -30,6 +31,9 @@ def get_heroes():
     return heroes
 
 
+KDA = namedtuple("KDA", ["kills", "deaths", "assists"])
+
+
 def create_match_notification_message(account_id, match, hero_lookup):
     """
     Create a nice notification message that the player with account_id account_id finished the match.
@@ -37,17 +41,20 @@ def create_match_notification_message(account_id, match, hero_lookup):
     :param match:
     :return: String that summarizes the player's match.
     """
-    msg_template = "just %s a game playing hero %s! Match ID: %d"
+    msg_template = "just {won_lost} a game playing hero {hero_name} with K/D/A: {k}/{d}/{a}! (match ID: {match})"
     radiant = False
     hero_id = None
+    kda = None
     for index, player in enumerate(match["players"]):
         if player["account_id"] == account_id:
             hero_id = player["hero_id"]
+            kda = KDA(player["kills"], player["deaths"], player["assists"])
             if index < 5:
                 radiant = True
             else:
                 radiant = False
             break
+    assert hero_id, "No hero found for player {player} in match {match}".format(player=account_id, match=match["match_seq_num"])
     radiant_win = match["radiant_win"]
     if (radiant_win and radiant) or (not radiant_win and not radiant):
         result = "won"
@@ -56,4 +63,4 @@ def create_match_notification_message(account_id, match, hero_lookup):
 
     hero = hero_lookup[hero_id]
 
-    return msg_template % (result, hero, match["match_seq_num"])
+    return msg_template.format(won_lost=result, hero_name=hero, k=kda.kills, d=kda.deaths, a=kda.assists, match=match["match_seq_num"])
