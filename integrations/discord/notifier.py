@@ -29,17 +29,18 @@ async def on_message(message):
         help_message="""
         ** I'm just an experiment!  Your user info may be lost at any time.  I also might explode.**
         
-        I watch Dota 2 matches as they finish and I can update this channel when you finish a game, so your friends can make fun of you.
+        I watch Dota 2 matches as they finish and I can update this channel when you finish a game
         Commands:
         `!stalker help`:
             This command.
         `!stalker status`:
             I'll tell you if I'm up and in your channel.
-        `!stalker stalkme`:
+        `!stalker addme`:
             First I'll send a link for you to authorize me to look at your Discord integrations, so that I can get your steam ID.  Then I'll add your name to the list of users to stalk for THIS channel.  Obviously this only  works if you've connected your steam account to your discord account.  Once I have your steam ID, I'll update this channel whenever you finish a Dota game!
         `!stalker stop all`
             I'll stop stalking you in ALL channels.
 
+        Add me to your own server: https://discordapp.com/oauth2/authorize?client_id=265362185130082304&scope=bot&permissions=0
         Contact dzbug#2602 on Discord for requests/bug reports.  But seriously, I'm very experimental, so don't expect her to help ._.
         """
         await client.send_message(message.channel, help_message)
@@ -66,6 +67,9 @@ async def on_message(message):
 
     elif message.content.startswith('!stalker'):
         await client.send_message(message.channel, 'Unrecognized command.  try `!stalker help`')
+
+    elif message.content.startswith('!'):
+        await client.send_message(message.channel, 'Are you looking for me?  try `!stalker help`')
 
 
 async def push_notifications():

@@ -143,7 +143,6 @@ class MatchStream:
             logging.info("Received empty response (BadStatusLine), "
                          "waiting & continuing...")
             self._reconnect_connection(num_attempts=-1)
-
             return None
         except socket.timeout:
             logging.info("Connection timed out, "
@@ -153,6 +152,9 @@ class MatchStream:
         except ConnectionResetError:
             logging.info("Connection reset, waiting & continuing...")
             self._reconnect_connection(num_attempts=-1)
+            return None
+        except Exception as e:
+            logging.info("Got exception while getting next matches: ", e)
             return None
 
         try:

@@ -66,7 +66,7 @@ def make_session(token=None, state=None, scope=None):
 
 @app.route('/dota_stalker_add')
 def index():
-    discord = make_session(scope='connections')
+    discord = make_session(scope=['connections', 'identify'])
     authorization_url, state = discord.authorization_url(AUTHORIZATION_BASE_URL)
     session['oauth2_state'] = state
     return redirect(authorization_url)
@@ -87,6 +87,8 @@ def callback():
     session['oauth2_token'] = token
     connections = discord.get(API_BASE_URL + '/users/@me/connections').json()
     user = discord.get(API_BASE_URL + '/users/@me').json()
+    print("DEBUG: Discord user is: %s" % user)
+    print("DEBUG: Discord ID is: %s" % user["id"])
     b64_steam_id = None # base64 steam ID
     print("DEBUG: about to check %d connections", len(connections))
     for connection in connections:
@@ -102,6 +104,8 @@ def callback():
     print("DEBUG: b64 steam ID is %d" % b64_steam_id)
     b32_steam_id = b64_steam_id & THIRTY_TWO_ONES
     print("DEBUG: b32 steam ID is %d" % b32_steam_id)
+    print("DEBUG: Discord user is: %s" % user)
+    print("DEBUG: Discord ID is: %s" % user["id"])
     state.storage.steam_to_discord[b32_steam_id] = user['id']
     print("DEBUG: successfully stored steam ID %s for user %s" % (b32_steam_id, user))
     return redirect(url_for('.steam_id_success'))

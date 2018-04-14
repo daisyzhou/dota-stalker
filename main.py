@@ -6,8 +6,12 @@ from integrations.discord.oauth import app as discord_oauth_app
 from matches import util
 # import test_data
 
+import logging
 import queue
 import threading
+
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(asctime)s %(message)s")
 
 ms = match_stream.MatchStream()
 ms.start(5)
