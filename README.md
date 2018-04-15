@@ -22,11 +22,9 @@ DISCORD_BOT_CLIENT_SECRET = ""
 
 ## database
 ```sql
-create table subscriptions (id integer primary key, owner text, steam_id integer, sub_channel text, sub_user text);
-```
-
-```sql
+create table subscriptions (id serial primary key, owner text, steam_id integer, sub_channel text, sub_user text);
 create index on subscriptions(steam_id);
+CREATE TABLE discord_users (discord_id text PRIMARY KEY, connected_steam_id integer);
 ```
 
 ## other dependencies
@@ -40,10 +38,8 @@ To add the bot to a server: https://discordapp.com/oauth2/authorize?client_id=BO
 
 
 # TODO
-* make the storage threadsafe (it's super definitely not right now... o_o)
 * might want to stop using discord.py library and implement all that gateway stuff ourselves?
 * add a testing framework for the discord bot (use a mock MatchStream)
-* persist state somewhere
 * disallow using the anonymous user ID
-* if it starts getting too slow, parallelize the sending messages to discord part
-
+* if it starts getting too slow, try parallelizing the sending messages to discord part
+* retry db connections on exceptions

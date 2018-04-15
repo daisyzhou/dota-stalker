@@ -53,7 +53,8 @@ async def on_message(message):
         while not storage.check_discord_id_tracked(discord_id):
             print("DEBUG: waiting for steam ID from user: %s" % discord_id)
             await asyncio.sleep(5)
-        storage.add_channel_for_discord_id(discord_id, message.channel)
+        steam_id = storage.steam_from_discord(discord_id)
+        storage.add_channel_for_discord_id(discord_id, steam_id, message.channel)
         await client.send_message(message.channel, '<@%s>, I have your steam ID.  Added you to the list for this channel.' % discord_id)
 
     elif message.content.startswith('!stalker removeme'):
@@ -73,21 +74,21 @@ async def push_notifications():
     while not client.is_closed:
         await asyncio.sleep(0)
         try:
-            (player, message_chunk) = notify_queue.matches_to_notify.get_nowait()
+            (steam_id, message_chunk) = notify_queue.matches_to_notify.get_nowait()
         except queue.Empty:
             continue
         messages_sent = 0
-        if storage.check_discord_id_tracked(player):
-            discord_id = storage.get_discord_id_from_steam(player)
-            channels = storage.get_channels_for_discord_id(discord_id)
-            for channel in channels:
+        if storage.check_steam_id_tracked(steam_id):
+            channels_map = storage.get_owners_and_channels_for_steam_id(steam_id)
+            for channel, notify_users in channels_map.items():
                 start = time.time()
-                message = "%s %s" % ("<@%s> " % discord_id, message_chunk)
+                user_notification_string = " ".join(["<@%s> " % discord_id for discord_id in notify_users])
+                message = "%s: %s" % (user_notification_string, message_chunk)
                 await client.send_message(channel, message)
                 end = time.time()
                 print("time it took to send message: %d" % (end-start))
                 messages_sent += 1
-        print("%d messages sent for player %s" % (messages_sent, player))
+        print("%d messages sent for player %s" % (messages_sent, steam_id))
 
 client.loop.create_task(push_notifications())
 

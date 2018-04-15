@@ -4,6 +4,7 @@ from collections import defaultdict
 from collections import namedtuple
 
 import local_config
+from state import storage
 
 
 def create_steamapi_connection():
@@ -41,7 +42,7 @@ def create_match_notification_message(account_id, match, hero_lookup):
     :param match:
     :return: String that summarizes the player's match.
     """
-    msg_template = "just {won_lost} a game playing hero {hero_name} with K/D/A: {k}/{d}/{a}! (match ID: {match})"
+    msg_template = "<@%{discord_name}> just {won_lost} a game playing hero {hero_name} with K/D/A: {k}/{d}/{a}! (match ID: {match})"
     radiant = False
     hero_id = None
     kda = None
@@ -62,5 +63,6 @@ def create_match_notification_message(account_id, match, hero_lookup):
         result = "lost"
 
     hero = hero_lookup[hero_id]
+    discord_name = storage.get_discord_id_from_steam(account_id)
 
-    return msg_template.format(won_lost=result, hero_name=hero, k=kda.kills, d=kda.deaths, a=kda.assists, match=match["match_seq_num"])
+    return msg_template.format(discord_name=discord_name, won_lost=result, hero_name=hero, k=kda.kills, d=kda.deaths, a=kda.assists, match=match["match_seq_num"])

@@ -36,5 +36,5 @@ for match in ms:
                 message = util.create_match_notification_message(player, match, heroes)
                 notify_queue.matches_to_notify.put((player, message), timeout=5)
             except queue.Full:
-                print("ERROR: Queue full when enqueuing match to notify.  Something is probably slow.")
+                logging.error("Queue full when enqueuing match to notify.  Something is probably slow.")
 
