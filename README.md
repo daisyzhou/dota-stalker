@@ -24,7 +24,7 @@ DISCORD_BOT_CLIENT_SECRET = ""
 ```sql
 create table subscriptions (id serial primary key, owner text, steam_id integer, sub_channel text, sub_user text);
 create index on subscriptions(steam_id);
-CREATE TABLE discord_users (discord_id text PRIMARY KEY, connected_steam_id integer);
+CREATE TABLE discord_users (discord_id text PRIMARY KEY, steam_id integer);
 ```
 
 ## other dependencies
