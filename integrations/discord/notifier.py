@@ -73,10 +73,6 @@ async def on_message(message):
             await asyncio.sleep(5)
         steam_id = storage.steam_from_discord(discord_id)
         storage.add_channel_for_discord_id(discord_id, steam_id, message.channel)
-        for owner, channels in storage.get_owners_and_channels_for_steam_id(steam_id).items():
-            if owner == discord_id and message.channel.id in channels:
-                await client.send_message("<@%s>, I am already tracking you for this channel!" % discord_id)
-                return
         await client.send_message(message.channel, '<@%s>, I have your steam ID.  Added you to the list for this channel.' % discord_id)
 
     elif message.content.startswith('!stalker removeme'):
