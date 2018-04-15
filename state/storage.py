@@ -55,9 +55,9 @@ def get_owners_and_channels_for_steam_id(steam_id):
     with global_connection.cursor(cursor_factory=DictCursor) as curs:
         curs.execute("SELECT owner, sub_channel FROM subscriptions WHERE steam_id=%s", (steam_id,))
         result = curs.fetchall()
-    channel_map = defaultdict(lambda:[])
+    channel_map = defaultdict(lambda: [])
     for row in result:
-        sub_channel = row["sub_channel"]
+        sub_channel = Object(id=row["sub_channel"])
         owner = row["owner"]
         channel_map[sub_channel].append(owner)
     return channel_map
