@@ -82,7 +82,7 @@ async def push_notifications():
             channels_map = storage.get_owners_and_channels_for_steam_id(steam_id)
             for channel, notify_users in channels_map.items():
                 start = time.time()
-                user_notification_string = " ".join(["<@%{}> ".format(discord_id) for discord_id in notify_users])
+                user_notification_string = " ".join(["<@%s>" % discord_id for discord_id in notify_users])
                 message = "%s: %s" % (user_notification_string, message_chunk)
                 await client.send_message(channel, message)
                 end = time.time()

@@ -42,7 +42,7 @@ def create_match_notification_message(account_id, match, hero_lookup):
     :param match:
     :return: String that summarizes the player's match.
     """
-    msg_template = "<@%{discord_name}> just {won_lost} a game playing hero {hero_name} with K/D/A: {k}/{d}/{a}! (match ID: {match})"
+    msg_template = "<@{discord_name}> just {won_lost} a game playing hero {hero_name} with K/D/A: {k}/{d}/{a}! (match ID: {match})"
     radiant = False
     hero_id = None
     kda = None
