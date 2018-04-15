@@ -60,7 +60,7 @@ async def on_message(message):
             return
 
         storage.add_channel_for_discord_id(discord_user=discord_id, steam_id=steam_id, channel=message.channel)
-        await client.send_message(message.channel, " <@%s>, successfully added your subscription to %s." % (discord_id, steam_id))
+        await client.send_message(message.channel, " <@%s>, successfully added your subscription to %s." % (discord_id, util.get_steam_username(steam_id)))
 
     elif message.content.startswith('!stalker subscribeme'):
         discord_id = message.author.id
