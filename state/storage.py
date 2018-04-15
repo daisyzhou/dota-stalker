@@ -9,9 +9,9 @@ global_connection = psycopg2.connect("postgresql://postgres:2fats@localhost:5432
 global_connection.autocommit = True
 
 
-def add_channel_for_discord_id(player, steam_id, channel):
+def add_channel_for_discord_id(discord_user, steam_id, channel):
     with global_connection.cursor() as curs:
-        curs.execute("INSERT INTO subscriptions(owner,steam_id,sub_channel,sub_user) VALUES (%s, %s, %s, null)", (player, steam_id, channel.id))
+        curs.execute("INSERT INTO subscriptions(owner,steam_id,sub_channel,sub_user) VALUES (%s, %s, %s, null)", (discord_user, steam_id, channel.id))
 
 
 def get_channels_for_discord_id(player):

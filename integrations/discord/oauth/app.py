@@ -1,16 +1,13 @@
-import math
 import os
 
 from flask import Flask, session, redirect, request, url_for, jsonify
 from requests_oauthlib import OAuth2Session
 from werkzeug.exceptions import HTTPException
 
-import state.storage
 import local_config
+import state.storage
+from matches import util
 
-
-# In binary, this is 32 1s, which is useful for converting steam IDs
-THIRTY_TWO_ONES = int(math.pow(2, 32) - 1)
 
 OAUTH2_CLIENT_ID = local_config.DISCORD_BOT_CLIENT_ID
 OAUTH2_CLIENT_SECRET = local_config.DISCORD_BOT_CLIENT_SECRET
@@ -102,7 +99,7 @@ def callback():
 
     b64_steam_id = int(b64_steam_id)
     print("DEBUG: b64 steam ID is %d" % b64_steam_id)
-    b32_steam_id = b64_steam_id & THIRTY_TWO_ONES
+    b32_steam_id = util.steam_id_64_to_32(b64_steam_id)
     print("DEBUG: b32 steam ID is %d" % b32_steam_id)
     print("DEBUG: Discord user is: %s" % user)
     print("DEBUG: Discord ID is: %s" % user["id"])

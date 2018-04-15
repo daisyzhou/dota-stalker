@@ -1,10 +1,15 @@
-import http
-import json
 from collections import defaultdict
 from collections import namedtuple
+import http
+import json
+import math
 
 import local_config
 from state import storage
+
+
+# In binary, this is 32 1s, which is useful for converting steam IDs
+THIRTY_TWO_ONES = int(math.pow(2, 32) - 1)
 
 
 def create_steamapi_connection():
@@ -12,6 +17,25 @@ def create_steamapi_connection():
         "api.steampowered.com",
         timeout=10
     )
+
+
+def get_steam_username(steam_id_32):
+    with create_steamapi_connection() as connection:
+        connection.request(
+            "GET",
+            "ISteamUser/GetPlayerSummaries/v0002/?key={key}&steamids={steam_id}"
+                .format(
+                key=local_config.DOTA2_API_KEY,
+                steam_id=steam_id_32_to_64(steam_id_32)
+            )
+        )
+        response = connection.getresponse()
+        decoded = json.loads(response.read().decode("utf-8"))
+    players = decoded["response"]["players"]
+    if len(players) != 1:
+        return "Unknown User with ID %s" % steam_id_32
+    return players[0]["personaname"]
+
 
 
 def get_heroes():
@@ -42,7 +66,7 @@ def create_match_notification_message(account_id, match, hero_lookup):
     :param match:
     :return: String that summarizes the player's match.
     """
-    msg_template = "<@{discord_name}> just {won_lost} a game playing hero {hero_name} with K/D/A: {k}/{d}/{a}! (match ID: {match})"
+    msg_template = "{steam_name} just {won_lost} a game playing hero {hero_name} with K/D/A: {k}/{d}/{a}! (match ID: {match})"
     radiant = False
     hero_id = None
     kda = None
@@ -63,6 +87,39 @@ def create_match_notification_message(account_id, match, hero_lookup):
         result = "lost"
 
     hero = hero_lookup[hero_id]
-    discord_name = storage.get_discord_id_from_steam(account_id)
+    steam_name = get_steam_username(account_id)
 
-    return msg_template.format(discord_name=discord_name, won_lost=result, hero_name=hero, k=kda.kills, d=kda.deaths, a=kda.assists, match=match["match_seq_num"])
+    return msg_template.format(steam_name=steam_name, won_lost=result, hero_name=hero, k=kda.kills, d=kda.deaths, a=kda.assists, match=match["match_seq_num"])
+
+
+def steam_id_32_to_64(steam_id_32):
+    """
+
+    :param steam_id_32:
+    :return: 64 bit steam ID with some assumptions about the metadata in the first 32 bits
+    """
+    prefix_64 = 76561197960265728
+    return prefix_64 | steam_id_32
+
+
+def steam_id_64_to_32(steam_id_64):
+    steam_id_64 = int(steam_id_64)
+    b32_steam_id = steam_id_64 & THIRTY_TWO_ONES
+    return b32_steam_id
+
+
+def validate_and_return_32bit(possible_steam_id):
+    """
+
+    :param possible_steam_id:
+    :return: Tuple of (bool, int or None) meaning (valid, steam_id)
+    """
+    try:
+        steam_id = int(possible_steam_id)
+    except ValueError:
+        return (False, None)
+    if steam_id & THIRTY_TWO_ONES == steam_id:
+        return (True, steam_id)
+    return (False, steam_id)
+
+

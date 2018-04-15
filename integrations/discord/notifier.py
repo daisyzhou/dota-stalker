@@ -3,6 +3,7 @@ import discord
 import queue
 import time
 
+from matches import util
 from state import storage
 import local_config
 from integrations import notify_queue
@@ -28,23 +29,40 @@ async def on_message(message):
         help_message="""
         ** I'm just an experiment!  Your user info may be lost at any time.  I also might explode.**
         
-        I watch Dota 2 matches as they finish and I can update this channel when you finish a game
+        I watch Dota 2 matches as they finish.  You can subscribe to any Steam ID and I'll notify you in this channel when they finish a game, but ONLY IF they have public match data enabled.
+        I can also send a message to this channel whenever YOU finish a game, using your Steam connection to Discord to find your Steam ID 
+
         Commands:
         `!stalker help`:
             This command.
         `!stalker status`:
             I'll tell you if I'm up and in your channel.
-        `!stalker addme`:
-            First I'll send a link for you to authorize me to look at your Discord integrations, so that I can get your steam ID.  Then I'll add your name to the list of users to stalk for THIS channel.  This only  works if you've connected your steam account to your discord account and if you have public match info enabled in dota.  Once I have your steam ID, I'll update this channel whenever you finish a Dota game!
+        `!stalker subscribe <32 bit steam ID>`:
+            I'll notify you in this channel, when the player with the provided steam ID finishes a game.  You can find the correct steam ID using dotabuff (last part of URL https://www.dotabuff.com/players/<32 bit steam ID>), or https://steamid.io (last part of steamID3).
+        `!stalker subscribeme`:
+            If finding a steam ID is too much work ... I can find your steam ID for you if you have your Steam account connected to discord.
+            Once I have your steam ID, I'll notify you in this channel whenever YOU finish a Dota game!
         `!stalker removeme`
-            I'll stop stalking you in ALL channels.
+            I'll remove ALL subscriptions you created in ALL channels.
 
-        Add me to your own server: https://discordapp.com/oauth2/authorize?client_id=265362185130082304&scope=bot&permissions=0
+        Add me to your own server by following this link: https://discordapp.com/oauth2/authorize?client_id=265362185130082304&scope=bot&permissions=0
         Contact dzbug#2602 on Discord for requests/bug reports.  But seriously, I'm very experimental, so don't expect her to help ._.
         """
         await client.send_message(message.channel, help_message)
 
-    elif message.content.startswith('!stalker addme'):
+    elif message.content.startswith('!stalker subscribe '):
+        discord_id = message.author.id
+        rest_of_message = message.content.strip("!stalker notifyme")
+        valid, steam_id = util.validate_and_return_32bit(rest_of_message.strip())
+        if not valid:
+            await client.send_message(
+                message.channel, "<@%s>, %s is not a valid steam ID." % (message.author, rest_of_message))
+            return
+
+        storage.add_channel_for_discord_id(discord_user=discord_id, steam_id=steam_id, channel=message.channel)
+        await client.send_message(message.channel, " <@%s>, successfully added your subscription to %s." % (message.author, steam_id))
+
+    elif message.content.startswith('!stalker subscribeme'):
         discord_id = message.author.id
         if not storage.check_discord_id_tracked(discord_id):
             await client.send_message(
@@ -82,8 +100,12 @@ async def push_notifications():
             channels_map = storage.get_owners_and_channels_for_steam_id(steam_id)
             for channel, notify_users in channels_map.items():
                 start = time.time()
-                user_notification_string = " ".join(["<@%s>" % discord_id for discord_id in notify_users])
-                message = "%s: %s" % (user_notification_string, message_chunk)
+                # construct a string for @-mentioning all users who have subscribed to this player
+                user_notification_string = " ".join(["<@%s>" % discord_id for discord_id in notify_users if storage.get_discord_id_from_steam(steam_id) != discord_id])
+                if len(user_notification_string) > 0:
+                    message = "%s: %s" % (user_notification_string, message_chunk)
+                else:
+                    message = message_chunk
                 await client.send_message(channel, message)
                 end = time.time()
                 print("time it took to send message: %d" % (end-start))
