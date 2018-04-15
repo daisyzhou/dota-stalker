@@ -23,7 +23,7 @@ def get_steam_username(steam_id_32):
     connection = create_steamapi_connection()
     connection.request(
         "GET",
-        "ISteamUser/GetPlayerSummaries/v0002/?key={key}&steamids={steam_id}"
+        "/ISteamUser/GetPlayerSummaries/v0002/?key={key}&steamids={steam_id}"
             .format(
             key=local_config.DOTA2_API_KEY,
             steam_id=steam_id_32_to_64(steam_id_32)
