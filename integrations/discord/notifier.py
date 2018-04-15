@@ -52,15 +52,15 @@ async def on_message(message):
 
     elif message.content.startswith('!stalker subscribe '):
         discord_id = message.author.id
-        rest_of_message = message.content.strip("!stalker notifyme")
+        rest_of_message = message.content.strip("!stalker subscribe ")
         valid, steam_id = util.validate_and_return_32bit(rest_of_message.strip())
         if not valid:
             await client.send_message(
-                message.channel, "<@%s>, %s is not a valid steam ID." % (message.author, rest_of_message))
+                message.channel, "<@%s>, %s is not a valid steam ID." % (discord_id, rest_of_message))
             return
 
         storage.add_channel_for_discord_id(discord_user=discord_id, steam_id=steam_id, channel=message.channel)
-        await client.send_message(message.channel, " <@%s>, successfully added your subscription to %s." % (message.author, steam_id))
+        await client.send_message(message.channel, " <@%s>, successfully added your subscription to %s." % (discord_id, steam_id))
 
     elif message.content.startswith('!stalker subscribeme'):
         discord_id = message.author.id
