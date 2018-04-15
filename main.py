@@ -31,7 +31,7 @@ for match in ms:
         if "account_id" in player  # Bots have no account_id
     ])
     for player in players_in_match:
-        if player in storage.steam_to_discord.keys():
+        if storage.check_steam_id_tracked(player):
             try:
                 message = util.create_match_notification_message(player, match, heroes)
                 notify_queue.matches_to_notify.put((player, message), timeout=5)

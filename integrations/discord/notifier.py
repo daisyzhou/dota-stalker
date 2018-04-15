@@ -19,10 +19,9 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.content.startswith('!help'):
-        await client.send_message(message.channel, 'type `!stalker help` for more help from me ^_^')
-
-    elif message.content.startswith('!stalker status'):
+    if message.content.startswith('!stalker status'):
+        print("USER ID IS: {}, type {}".format(message.author.id, type(message.author.id)))
+        print("CHANNEL ID IS: {}, type {}".format(message.channel.id, type(message.channel.id)))
         await client.send_message(message.channel, 'I am alive... I think')
 
     elif message.content.startswith('!stalker help'):
@@ -36,8 +35,8 @@ async def on_message(message):
         `!stalker status`:
             I'll tell you if I'm up and in your channel.
         `!stalker addme`:
-            First I'll send a link for you to authorize me to look at your Discord integrations, so that I can get your steam ID.  Then I'll add your name to the list of users to stalk for THIS channel.  Obviously this only  works if you've connected your steam account to your discord account.  Once I have your steam ID, I'll update this channel whenever you finish a Dota game!
-        `!stalker stop all`
+            First I'll send a link for you to authorize me to look at your Discord integrations, so that I can get your steam ID.  Then I'll add your name to the list of users to stalk for THIS channel.  This only  works if you've connected your steam account to your discord account and if you have public match info enabled in dota.  Once I have your steam ID, I'll update this channel whenever you finish a Dota game!
+        `!stalker removeme`
             I'll stop stalking you in ALL channels.
 
         Add me to your own server: https://discordapp.com/oauth2/authorize?client_id=265362185130082304&scope=bot&permissions=0
@@ -45,30 +44,27 @@ async def on_message(message):
         """
         await client.send_message(message.channel, help_message)
 
-    elif message.content.startswith('!stalker stalkme'):
+    elif message.content.startswith('!stalker addme'):
         discord_id = message.author.id
-        if discord_id not in storage.steam_to_discord.values():
+        if not storage.check_discord_id_tracked(discord_id):
             await client.send_message(
                 message.channel,
                 "<@%s>, please authorize me to see your steam ID by clicking here: http://daisy.zone:5005/dota_stalker_add.  I'll wait!" % discord_id)
-        while discord_id not in storage.steam_to_discord.values():
+        while not storage.check_discord_id_tracked(discord_id):
             print("DEBUG: waiting for steam ID from user: %s" % discord_id)
             await asyncio.sleep(5)
-        storage.player_channels[discord_id].append(message.channel)
+        storage.add_channel_for_discord_id(discord_id, message.channel)
         await client.send_message(message.channel, '<@%s>, I have your steam ID.  Added you to the list for this channel.' % discord_id)
 
-    elif message.content.startswith('!stalker stop all'):
+    elif message.content.startswith('!stalker removeme'):
         discord_id = message.author.id
-        storage.player_channels[discord_id] = []
-        for s,d in storage.steam_to_discord.items():
-            if d == discord_id:
-                del(storage.steam_to_discord, s)
+        storage.remove_discord_id(discord_id)
         await client.send_message(message.channel, 'Removed <@%s> from all channels.  You are dead to me.' % discord_id)
 
     elif message.content.startswith('!stalker'):
         await client.send_message(message.channel, 'Unrecognized command.  try `!stalker help`')
 
-    elif message.content.startswith('!'):
+    elif message.content.startswith('!help'):
         await client.send_message(message.channel, 'Are you looking for me?  try `!stalker help`')
 
 
@@ -81,17 +77,17 @@ async def push_notifications():
         except queue.Empty:
             continue
         messages_sent = 0
-        for discord_id, channels in storage.player_channels.items():
-            if storage.steam_to_discord[player] == discord_id:
-                for channel in channels:
-                    start = time.time()
-                    message = "%s %s" % ("<@%s> " % discord_id, message_chunk)
-                    await client.send_message(channel, message)
-                    end = time.time()
-                    print("time it took to send message: %d" % (end-start))
-                    messages_sent += 1
-        if messages_sent == 0:
-            print("ERROR: 0 messages sent for player %s" % player)
+        if storage.check_discord_id_tracked(player):
+            discord_id = storage.get_discord_id_from_steam(player)
+            channels = storage.get_channels_for_discord_id(discord_id)
+            for channel in channels:
+                start = time.time()
+                message = "%s %s" % ("<@%s> " % discord_id, message_chunk)
+                await client.send_message(channel, message)
+                end = time.time()
+                print("time it took to send message: %d" % (end-start))
+                messages_sent += 1
+        print("%d messages sent for player %s" % (messages_sent, player))
 
 client.loop.create_task(push_notifications())
 

@@ -106,7 +106,7 @@ def callback():
     print("DEBUG: b32 steam ID is %d" % b32_steam_id)
     print("DEBUG: Discord user is: %s" % user)
     print("DEBUG: Discord ID is: %s" % user["id"])
-    state.storage.steam_to_discord[b32_steam_id] = user['id']
+    state.storage.add_discord_id_for_steam(b32_steam_id, user['id'])
     print("DEBUG: successfully stored steam ID %s for user %s" % (b32_steam_id, user))
     return redirect(url_for('.steam_id_success'))
 

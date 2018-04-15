@@ -20,18 +20,24 @@ DISCORD_BOT_CLIENT_ID = ""
 DISCORD_BOT_CLIENT_SECRET = ""
 ```
 
+## database
+```sql
+create table subscriptions (id integer primary key, owner text, steam_id integer, sub_channel text, sub_user text);
+```
+
+```sql
+create index on subscriptions(steam_id);
+```
+
 ## other dependencies
 ### For discord integration:
+Setup:
 ```bash
-venv/bin/pip install -U discord.py
+venv/bin/pip3  install -r requirements.txt -r integrations/discord/oauth/requirements.txt
 ```
 
 To add the bot to a server: https://discordapp.com/oauth2/authorize?client_id=BOT_CLIENT_ID_GOES_HERE&scope=bot&permissions=0
 
-Setup:
-```bash
-venv/bin/pip3  install -r integrations/discord/oauth/requirements.txt
-```
 
 # TODO
 * make the storage threadsafe (it's super definitely not right now... o_o)
