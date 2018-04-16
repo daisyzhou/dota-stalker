@@ -41,5 +41,6 @@ To add the bot to a server: https://discordapp.com/oauth2/authorize?client_id=BO
 * might want to stop using discord.py library and implement all that gateway stuff ourselves?
 * add a testing framework for the discord bot (use a mock MatchStream)
 * disallow using the anonymous user ID
-* if it starts getting too slow, try parallelizing the sending messages to discord part
 * retry db connections on exceptions
+* add a constraint to the table to not allow duplicate subscriptions from the same user (removes need for SELECT DISTINCT)
+* if it starts getting too slow, try parallelizing the sending messages to discord part
