@@ -98,7 +98,7 @@ async def push_notifications():
         messages_sent = 0
         if storage.check_steam_id_tracked(steam_id):
             channels_map = storage.get_owners_and_channels_for_steam_id(steam_id)
-            for channel, notify_users in channels_map.items():
+            for channel_id, notify_users in channels_map.items():
                 start = time.time()
                 # construct a string for @-mentioning all users who have subscribed to this player
                 user_notification_string = " ".join(["<@%s>" % discord_id for discord_id in notify_users if storage.get_discord_id_from_steam(steam_id) != discord_id])
@@ -106,6 +106,7 @@ async def push_notifications():
                     message = "%s: %s" % (user_notification_string, message_chunk)
                 else:
                     message = message_chunk
+                channel = Object(id=channel_id)
                 await client.send_message(channel, message)
                 end = time.time()
                 print("time it took to send message: %d" % (end-start))
